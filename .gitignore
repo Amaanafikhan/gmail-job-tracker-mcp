@@ -1,0 +1,7 @@
+__pycache__/
+*.egg-info/
+.venv/
+*.db
+token.json
+client_secret*.json
+credentials.json

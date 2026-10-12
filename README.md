@@ -1,94 +1,63 @@
-# Daily Python / Django Fresher Job Alerts
+# Alexa+ Job Hunt Assistant (MCP server)
 
-Every morning at about 7:45 AM IST, this finds new **fresher-friendly Python and Django jobs** in **Bengaluru, Hyderabad and remote (open to India)**, and sends them to your **Telegram** and/or **Gmail**.
+An [MCP](https://modelcontextprotocol.io) server that lets an AI assistant such as Alexa+ read and update your job-application tracker by voice:
 
-It runs free on GitHub Actions. Your laptop can be off. No Claude, no subscriptions.
+- "Any new replies from companies?"
+- "Add a follow-up for the Zoho application on Friday."
+- "What follow-ups do I have today?"
 
-## What it does
+Every tool returns a short, natural sentence meant to be read aloud, for example *"You have 2 new replies. Zoho wants to set up an interview and Razorpay sent an assessment."*
 
-1. Pulls jobs from Adzuna (India), Jooble (India), Remotive (remote) and Himalayas (remote).
-2. Keeps only **Python Developer** and **Django / full stack developer** titles. Data science, ML, QA/testing, DevOps, trainer and similar roles are dropped even if they mention Python.
-3. Drops senior roles (Senior, Lead, Manager, Architect…) and anything asking for 2+ years.
-4. Drops expired jobs (closing date passed) and anything posted more than 14 days ago.
-5. Splits the rest into two groups, newest first:
-   - **Fresher-friendly**: says fresher, junior, trainee, graduate, 0–1 years, etc.
-   - **Experience not stated**: worth a quick look before applying.
-6. Shows **salary**, **posting date** and **closing date** for each job when the site provides them. Adzuna salaries marked "(est.)" are Adzuna's own estimate, not the employer's number.
-7. Skips anything it already sent you before, even if the same job appears on two sites.
-8. Sends the digest.
+## Tools
 
-## One-time setup (about 15 minutes)
-
-### Step 1: Put the project on GitHub
-
-1. Go to github.com → **New repository** → name it `daily-job-alerts` → **Private** → Create.
-2. Click **uploading an existing file** and upload everything in this folder: `jobs.py`, `requirements.txt`, `seen_jobs.json`, `README.md`.
-3. The workflow file has to sit in a folder path. Click **Add file → Create new file**, type the name exactly as `.github/workflows/daily-jobs.yml` (GitHub creates the folders as you type the slashes), then paste in the contents of `daily-jobs.yml` and commit.
-
-### Step 2: Get free job API keys
-
-**Adzuna** (main source for Bengaluru and Hyderabad)
-1. Sign up at developer.adzuna.com.
-2. Open your dashboard and copy the **Application ID** and **Application Key**.
-
-**Jooble** (extra Indian listings, optional but recommended)
-1. Go to jooble.org/api/about and fill the short form.
-2. They email you an API key.
-
-Remotive and Himalayas need no keys.
-
-### Step 3: Set up Telegram (recommended)
-
-1. In Telegram, search **@BotFather** → send `/newbot` → pick a name and username. It gives you a **bot token**.
-2. Open your new bot and send it any message, like `hi`.
-3. In a browser, open this link with your token pasted in:
-   `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
-4. Find `"chat":{"id":` followed by a number. That number is your **chat ID**.
-
-### Step 4: Set up Gmail (optional)
-
-1. Turn on 2-Step Verification in your Google account.
-2. Go to myaccount.google.com/apppasswords → create an app password named "job alerts".
-3. Copy the 16-character password. Use this, not your normal password.
-
-### Step 5: Add the secrets to GitHub
-
-In your repo: **Settings → Secrets and variables → Actions → New repository secret**. Add each one you have:
-
-| Secret name | What to paste |
+| Tool | What it does |
 |---|---|
-| `ADZUNA_APP_ID` | Adzuna Application ID |
-| `ADZUNA_APP_KEY` | Adzuna Application Key |
-| `JOOBLE_API_KEY` | Jooble key |
-| `TELEGRAM_BOT_TOKEN` | Token from BotFather |
-| `TELEGRAM_CHAT_ID` | The number from Step 3 |
-| `GMAIL_ADDRESS` | Your Gmail address |
-| `GMAIL_APP_PASSWORD` | The 16-character app password |
-| `EMAIL_TO` | Optional: a different address to receive the email |
+| `add_application(company, role?, source?)` | Start tracking an application |
+| `list_applications(status?)` | Spoken summary, optionally for one status |
+| `update_status(company, status)` | `applied`, `replied`, `assessment`, `interview`, `offer`, `rejected` |
+| `add_followup(company, when, note?)` | `when` accepts "Friday", "tomorrow", "in 3 days", "30 October", `2026-10-30` |
+| `todays_followups()` | Follow-ups due today or overdue |
+| `complete_followup(company)` | Mark a company's follow-ups done |
+| `check_new_replies(days?)` | Scan the inbox, match mail to applications, classify (interview / assessment / offer / rejection / other), update status, announce each reply once |
 
-Skip any you don't use. A missing source or delivery channel is just skipped.
+Company names can be partial ("zoho" finds "Zoho Corp"). A reply only moves an application forward; offers and rejections are never overwritten by later mail. Job-board and no-reply mail is ignored.
 
-### Step 6: Test it
+## Run it
 
-1. Go to the **Actions** tab → allow workflows if asked.
-2. Click **Daily Python/Django job alerts** → **Run workflow**.
-3. Within a minute or two you should get your first digest.
+Requires Python 3.10+ and the `mcp` 2.x SDK.
 
-After that it runs by itself every morning.
+```bash
+pip install -e ".[dev]"
+pytest
 
-## Changing things later
+# stdio (local MCP clients, e.g. Claude Desktop / Claude Code)
+jobhunt-mcp
 
-All settings are at the top of `jobs.py`. Edit on GitHub with the pencil icon:
+# Streamable HTTP at http://127.0.0.1:8000/mcp (for a hosted/remote client)
+jobhunt-mcp --transport streamable-http --port 8000
+```
 
-- **Search terms**: `SEARCH_TERMS`
-- **Which job titles count**: `TITLE_TECH`, `TITLE_ROLE`, `TITLE_EXCLUDE`
-- **How old a job can be**: `MAX_AGE_DAYS`
-- **Cities**: `CITIES` and `CITY_ALIASES`
-- **How strict the fresher filter is**: `SENIOR_TITLE_WORDS` and `FRESHER_WORDS`
-- **Run time**: the `cron` line in the workflow file (it's in UTC; IST is UTC + 5:30)
+### Mail source
 
-## Good to know
+- **Demo (default):** `JOBHUNT_MAIL=demo` uses a built-in sample inbox, so everything runs without credentials. Add Zoho, Freshworks or Razorpay and call `check_new_replies`.
+- **Gmail:** `pip install -e ".[gmail]"`, then set `JOBHUNT_MAIL=gmail` and `JOBHUNT_GMAIL_CREDENTIALS=/path/to/oauth_client.json` (a Google Cloud "Desktop app" OAuth client). The first call opens a browser for consent. The scope is **read-only** (`gmail.readonly`) and the token is cached in `~/.jobhunt-mcp/token.json`.
 
-- GitHub may pause scheduled workflows in a repo with no activity for 60 days. The daily save of `seen_jobs.json` counts as activity, so this normally keeps it alive. If it ever stops, just click Run workflow once.
-- The filter reads job text, so it isn't perfect. Always check the experience line in the full listing before applying.
-- If nothing new matches on a day, it sends nothing.
+Data lives in SQLite at `~/.jobhunt-mcp/tracker.db` (override with `JOBHUNT_DB`).
+
+### Docker
+
+```bash
+docker build -t jobhunt-mcp .
+docker run -p 8000:8000 -v jobhunt-data:/data jobhunt-mcp
+```
+
+## Status and known gaps
+
+- The tracker logic, date parsing, reply classification and both transports (stdio and Streamable HTTP) are tested.
+- **Not yet done:** connecting this server to an actual Alexa+ device or the Alexa+ developer tooling, and authentication on the HTTP endpoint. Do not expose the HTTP transport to the internet without adding auth (the SDK supports an `auth` setting).
+- The Gmail provider is written against the Gmail API but has only been exercised with the demo inbox so far.
+- Reply classification is keyword-based, so unusual wording falls back to "replied".
+
+## License
+
+MIT
