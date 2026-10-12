@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import argparse
 import os
+from pathlib import Path
 
 from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
+from starlette.requests import Request
+from starlette.responses import HTMLResponse, PlainTextResponse
 
 from . import db, tracker
 from .mail import get_provider
@@ -18,6 +21,25 @@ mcp = MCPServer(
         "read them back as-is. Company names can be partial (e.g. 'Zoho')."
     ),
 )
+
+WEB_DIR = Path(__file__).parent / "web"
+
+
+@mcp.custom_route("/", methods=["GET"])
+async def web_client(request: Request) -> HTMLResponse:
+    """The simulated Alexa+ page: an MCP client served from the same origin as /mcp."""
+    return HTMLResponse((WEB_DIR / "index.html").read_text(encoding="utf-8"))
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health(request: Request) -> PlainTextResponse:
+    return PlainTextResponse("ok")
+
+
+@mcp.custom_route("/favicon.ico", methods=["GET"])
+async def favicon(request: Request) -> PlainTextResponse:
+    return PlainTextResponse("", status_code=204)
+
 
 READ = ToolAnnotations(readOnlyHint=True)
 WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False)

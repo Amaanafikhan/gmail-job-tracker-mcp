@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Hunt Assistant</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #14181f; --muted: #5d6675; --line: #e1e5ec;
+    --accent: #0b6bcb; --accent-ink: #ffffff; --user: #e8f1fc; --ok: #137a4b; --err: #b3261e;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1116; --panel: #161b22; --ink: #e8ecf2; --muted: #9aa5b5; --line: #262d38;
+      --accent: #4c9aff; --accent-ink: #0b1220; --user: #1b2a40; --ok: #48c78e; --err: #ff8a80;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1116; --panel: #161b22; --ink: #e8ecf2; --muted: #9aa5b5; --line: #262d38;
+    --accent: #4c9aff; --accent-ink: #0b1220; --user: #1b2a40; --ok: #48c78e; --err: #ff8a80;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 20px 16px 40px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 14px; margin: 2px 0 0; }
+  .pill { font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--muted); }
+  .pill.ok { color: var(--ok); border-color: currentColor; }
+  .pill.err { color: var(--err); border-color: currentColor; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; min-height: 460px; max-height: 70vh; }
+  .card h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 88%; padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; word-wrap: break-word; }
+  .msg.user { align-self: flex-end; background: var(--user); }
+  .msg.bot { align-self: flex-start; border: 1px solid var(--line); }
+  .msg.bot::before { content: "Assistant"; display: block; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 12px; }
+  .chip { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  form { display: flex; gap: 8px; padding: 12px 16px 16px; border-top: 1px solid var(--line); }
+  input[type=text] { flex: 1; min-width: 0; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  input[type=text]:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 0; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  button.icon { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  button.icon.on { border-color: var(--accent); color: var(--accent); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .trace { font-family: var(--mono); font-size: 12.5px; }
+  .tcall { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .tcall b { color: var(--accent); }
+  .tcall .dir { color: var(--muted); }
+  .tcall pre { margin: 4px 0 0; white-space: pre-wrap; word-break: break-word; color: var(--muted); }
+  .opts { display: flex; gap: 14px; align-items: center; color: var(--muted); font-size: 13px; padding: 0 16px 12px; flex-wrap: wrap; }
+  .opts label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  footer { color: var(--muted); font-size: 13px; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Job Hunt Assistant</h1>
+      <p class="sub">A simulated Alexa+ voice experience. This page is a real MCP client talking to the server.</p>
+    </div>
+    <span id="status" class="pill">Connecting…</span>
+  </header>
+
+  <div class="grid">
+    <section class="card" aria-label="Conversation">
+      <h2>Conversation</h2>
+      <div id="chat" class="scroll" aria-live="polite"></div>
+      <div class="chips" id="chips"></div>
+      <div class="opts">
+        <label><input type="checkbox" id="speak" checked> Speak replies</label>
+        <span id="micnote"></span>
+      </div>
+      <form id="form" autocomplete="off">
+        <button type="button" class="icon" id="mic" aria-label="Speak" title="Speak">Mic</button>
+        <input type="text" id="input" placeholder='Try: "Alexa, any new replies from companies?"' aria-label="Say something">
+        <button class="primary" id="send" type="submit" disabled>Send</button>
+      </form>
+    </section>
+
+    <section class="card" aria-label="MCP trace">
+      <h2>MCP trace</h2>
+      <div id="trace" class="scroll trace"></div>
+    </section>
+  </div>
+  <footer>Intent matching here is a simple rule-based stand-in for Alexa+'s language model. Every action goes through the MCP server over Streamable HTTP.</footer>
+</div>
+
+<script>
+"use strict";
+const PROTOCOL = "2025-11-25";
+const ENDPOINT = "/mcp";
+const $ = (id) => document.getElementById(id);
+
+// ---------- Minimal MCP client over Streamable HTTP ----------
+const mcp = {
+  sessionId: null, nextId: 1,
+  async rpc(method, params, { notify = false } = {}) {
+    const body = { jsonrpc: "2.0", method, params };
+    if (!notify) body.id = this.nextId++;
+    const headers = { "Content-Type": "application/json", "Accept": "application/json, text/event-stream" };
+    if (this.sessionId) headers["Mcp-Session-Id"] = this.sessionId;
+    if (method !== "initialize") headers["MCP-Protocol-Version"] = PROTOCOL;
+    const res = await fetch(ENDPOINT, { method: "POST", headers, body: JSON.stringify(body) });
+    const sid = res.headers.get("Mcp-Session-Id");
+    if (sid) this.sessionId = sid;
+    if (notify) return null;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const msg = (res.headers.get("Content-Type") || "").includes("text/event-stream") ? parseSSE(text, body.id) : JSON.parse(text);
+    if (msg.error) throw new Error(msg.error.message || "MCP error");
+    return msg.result;
+  },
+};
+function parseSSE(text, id) {
+  let found = null;
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.startsWith("data:")) continue;
+    try { const m = JSON.parse(line.slice(5).trim()); if (m.id === id) found = m; } catch {}
+  }
+  if (!found) throw new Error("No response in stream");
+  return found;
+}
+
+// ---------- Trace panel ----------
+function trace(dir, title, data) {
+  const el = document.createElement("div");
+  el.className = "tcall";
+  el.innerHTML = `<span class="dir">${dir}</span> <b></b><pre></pre>`;
+  el.querySelector("b").textContent = title;
+  el.querySelector("pre").textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+  $("trace").appendChild(el);
+  $("trace").scrollTop = $("trace").scrollHeight;
+}
+
+// ---------- Chat ----------
+function say(role, text) {
+  const el = document.createElement("div");
+  el.className = "msg " + role;
+  el.textContent = text;
+  $("chat").appendChild(el);
+  $("chat").scrollTop = $("chat").scrollHeight;
+  if (role === "bot" && $("speak").checked && "speechSynthesis" in window) {
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  }
+}
+
+// ---------- Intent matching (stand-in for Alexa+'s model) ----------
+const STATUSES = "applied|replied|assessment|interview|offer|rejected";
+const WHEN = "today|tomorrow|day after tomorrow|in \\d+ (?:days?|weeks?)|(?:next |this |on )?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)";
+const title = (s) => (s === s.toLowerCase() ? s.replace(/\b\w/g, (c) => c.toUpperCase()) : s);
+
+function route(raw) {
+  const t = raw.trim().replace(/^(?:hey\s+)?alexa[,\s]+/i, "").replace(/[.?!]+$/, "");
+  let m;
+  if ((m = t.match(/^(?:mark|finish|complete|i (?:did|finished)|done with)\s+(?:the\s+)?follow[- ]?ups?\s+(?:with|for|at)\s+(.+?)(?:\s+(?:as\s+)?done)?$/i)))
+    return { tool: "complete_followup", args: { company: title(m[1]) } };
+  if ((m = t.match(/follow[- ]?up\s+(?:for|with|on|at)\s+(?:the\s+)?(.+?)(?:\s+application)?\s+(?:on|by)\s+(.+)$/i)) ||
+      (m = t.match(new RegExp("follow[- ]?up\\s+(?:for|with|on|at)\\s+(?:the\\s+)?(.+?)(?:\\s+application)?\\s+(" + WHEN + ")$", "i"))))
+    return { tool: "add_followup", args: { company: title(m[1]), when: m[2] } };
+  if (/follow[- ]?ups?/i.test(t))
+    return { tool: "todays_followups", args: {} };
+  if ((m = t.match(new RegExp("^(?:mark|set|update|change)\\s+(?:the\\s+)?(.+?)(?:\\s+application)?\\s+(?:as|to)\\s+(" + STATUSES + ")$", "i"))))
+    return { tool: "update_status", args: { company: title(m[1]), status: m[2].toLowerCase() } };
+  if ((m = t.match(/^(?:add|track|log|save)\s+(?:an?\s+|my\s+)?(?:new\s+)?(?:job\s+)?application\s+(?:to|for|at|with)\s+(.+?)(?:\s+(?:as|for)\s+(?:an?\s+)?(.+))?$/i)) ||
+      (m = t.match(/^i\s+applied\s+(?:to|at)\s+(.+?)(?:\s+(?:as|for)\s+(?:an?\s+)?(.+))?$/i)))
+    return { tool: "add_application", args: { company: title(m[1]), role: m[2] ? title(m[2]) : "" } };
+  if (/repl(?:y|ies)|heard back|responses?|new (?:mail|emails?)|any (?:news|updates)/i.test(t))
+    return { tool: "check_new_replies", args: {} };
+  if (/applications?|how many|where do i stand|status/i.test(t)) {
+    const s = t.match(new RegExp("\\b(" + STATUSES + ")\\b", "i"));
+    return { tool: "list_applications", args: s ? { status: s[1].toLowerCase() } : {} };
+  }
+  return null;
+}
+
+async function handle(utterance) {
+  say("user", utterance);
+  const r = route(utterance);
+  if (!r) {
+    say("bot", 'Sorry, I didn\'t catch that. Try "any new replies from companies" or "add a follow-up for Zoho on Friday".');
+    return;
+  }
+  try {
+    trace("→", `tools/call ${r.tool}`, r.args);
+    const res = await mcp.rpc("tools/call", { name: r.tool, arguments: r.args });
+    const text = (res.content || []).map((c) => c.text || "").join(" ").trim();
+    trace("←", res.isError ? "error" : "result", text);
+    say("bot", text || "Done.");
+  } catch (e) {
+    trace("←", "error", String(e.message || e));
+    say("bot", "Sorry, something went wrong talking to the server.");
+  }
+}
+
+// ---------- Voice input (optional, browser support varies) ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR) {
+  const rec = new SR(); rec.lang = "en-US"; rec.interimResults = false;
+  rec.onresult = (e) => { $("mic").classList.remove("on"); handle(e.results[0][0].transcript); };
+  rec.onerror = rec.onend = () => $("mic").classList.remove("on");
+  $("mic").onclick = () => { $("mic").classList.add("on"); try { rec.start(); } catch {} };
+} else {
+  $("mic").disabled = true;
+  $("micnote").textContent = "Voice input isn't supported in this browser; type instead.";
+}
+
+// ---------- Boot ----------
+const EXAMPLES = [
+  "Alexa, any new replies from companies?",
+  "Add a follow-up for the Zoho application on Friday",
+  "What follow-ups do I have today?",
+  "How many applications do I have?",
+  "I applied to Swiggy as backend engineer",
+];
+for (const ex of EXAMPLES) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = ex;
+  b.onclick = () => handle(ex);
+  $("chips").appendChild(b);
+}
+$("form").onsubmit = (e) => { e.preventDefault(); const v = $("input").value.trim(); if (v) { $("input").value = ""; handle(v); } };
+
+(async function connect() {
+  try {
+    trace("→", "initialize", { protocolVersion: PROTOCOL });
+    const init = await mcp.rpc("initialize", { protocolVersion: PROTOCOL, capabilities: {}, clientInfo: { name: "alexa-plus-web-simulator", version: "0.1.0" } });
+    trace("←", `initialized (protocol ${init.protocolVersion})`, { server: init.serverInfo });
+    await mcp.rpc("notifications/initialized", {}, { notify: true });
+    const tools = await mcp.rpc("tools/list", {});
+    trace("←", `tools/list (${tools.tools.length} tools)`, tools.tools.map((t) => t.name));
+    $("status").textContent = `Connected · MCP ${init.protocolVersion} · ${tools.tools.length} tools`;
+    $("status").className = "pill ok";
+    $("send").disabled = false;
+    say("bot", "Hi! I can check replies from companies, track applications and schedule follow-ups. What would you like to do?");
+  } catch (e) {
+    $("status").textContent = "Server not reachable";
+    $("status").className = "pill err";
+    trace("←", "connection failed", String(e.message || e));
+  }
+})();
+</script>
+</body>
+</html>

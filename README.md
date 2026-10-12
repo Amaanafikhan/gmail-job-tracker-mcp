@@ -30,12 +30,19 @@ Requires Python 3.10+ and the `mcp` 2.x SDK.
 pip install -e ".[dev]"
 pytest
 
+# Streamable HTTP (MCP spec 2025-11-25): MCP endpoint at /mcp, demo page at /
+jobhunt-mcp --transport streamable-http --port 8000
+# then open http://127.0.0.1:8000/
+
 # stdio (local MCP clients, e.g. Claude Desktop / Claude Code)
 jobhunt-mcp
-
-# Streamable HTTP at http://127.0.0.1:8000/mcp (for a hosted/remote client)
-jobhunt-mcp --transport streamable-http --port 8000
 ```
+
+### The simulated Alexa+ page
+
+Open `http://127.0.0.1:8000/` for a voice-style assistant UI. The page is a real MCP client: it performs the `initialize` handshake (protocol `2025-11-25`), lists the tools, and calls them over Streamable HTTP. The **MCP trace** panel shows every request and result. Type or tap a sample phrase, or use the mic button in browsers that support speech recognition; replies can be read aloud.
+
+Intent matching on that page is a small set of rules standing in for Alexa+'s language model. Alexa+ itself decides which tool to call from the tool descriptions and schemas, which are in `server.py`.
 
 ### Mail source
 
@@ -53,10 +60,11 @@ docker run -p 8000:8000 -v jobhunt-data:/data jobhunt-mcp
 
 ## Status and known gaps
 
-- The tracker logic, date parsing, reply classification and both transports (stdio and Streamable HTTP) are tested.
-- **Not yet done:** connecting this server to an actual Alexa+ device or the Alexa+ developer tooling, and authentication on the HTTP endpoint. Do not expose the HTTP transport to the internet without adding auth (the SDK supports an `auth` setting).
-- The Gmail provider is written against the Gmail API but has only been exercised with the demo inbox so far.
-- Reply classification is keyword-based, so unusual wording falls back to "replied".
+- Tested: tracker logic, date parsing, reply classification, the HTTP routes, the `2025-11-25` handshake, and the web client driven end to end in headless Chromium against the demo inbox.
+- **Real Alexa+ is not connected.** The hackathon FAQ says the Alexa+ developer tools (MCP Toolkit, CLI, Web Simulator) are limited to select partners, so this project demonstrates the MCP server through the web client above instead. If you have access, the server is a standard Streamable HTTP MCP server; Alexa+ additionally requires a public HTTPS URL and OAuth 2.x, neither of which is implemented here.
+- No authentication on the HTTP endpoint. The SDK's DNS-rebinding protection only allows `localhost` hosts by default, so a hosted deployment must configure allowed hosts and add auth.
+- Gmail reading works against a real account in a manual test (50 messages fetched) but the matching rules have not been tuned on real mail. Classification is keyword-based, so unusual wording falls back to "replied".
+- Friction notes for the hackathon are in `docs/friction-log.md`.
 
 ## License
 
