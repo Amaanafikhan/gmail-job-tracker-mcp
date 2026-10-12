@@ -13,6 +13,7 @@ dev = ["pytest>=8"]
 
 [project.scripts]
 jobhunt-mcp = "jobhunt_mcp.server:main"
+jobhunt-auth = "jobhunt_mcp.auth:main"
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -40,7 +40,7 @@ jobhunt-mcp --transport streamable-http --port 8000
 ### Mail source
 
 - **Demo (default):** `JOBHUNT_MAIL=demo` uses a built-in sample inbox, so everything runs without credentials. Add Zoho, Freshworks or Razorpay and call `check_new_replies`.
-- **Gmail:** `pip install -e ".[gmail]"`, then set `JOBHUNT_MAIL=gmail` and `JOBHUNT_GMAIL_CREDENTIALS=/path/to/oauth_client.json` (a Google Cloud "Desktop app" OAuth client). The first call opens a browser for consent. The scope is **read-only** (`gmail.readonly`) and the token is cached in `~/.jobhunt-mcp/token.json`.
+- **Gmail:** `pip install -e ".[gmail]"`, then save your Google Cloud "Desktop app" OAuth client file as `~/.jobhunt-mcp/credentials.json` (or point `JOBHUNT_GMAIL_CREDENTIALS` at it), run `jobhunt-auth` once to sign in, then set `JOBHUNT_MAIL=gmail`. The scope is **read-only** (`gmail.readonly`) and the token is cached in `~/.jobhunt-mcp/token.json`.
 
 Data lives in SQLite at `~/.jobhunt-mcp/tracker.db` (override with `JOBHUNT_DB`).
 

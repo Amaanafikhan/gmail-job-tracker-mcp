@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import Protocol
 
 
+DEFAULT_CLIENT_FILE = Path.home() / ".jobhunt-mcp" / "credentials.json"
+
+
 @dataclass
 class Message:
     id: str
@@ -70,14 +73,21 @@ class GmailMail:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                client = os.environ.get("JOBHUNT_GMAIL_CREDENTIALS")
-                if not client:
-                    raise RuntimeError("Set JOBHUNT_GMAIL_CREDENTIALS to your Google OAuth client json file.")
+                client = os.environ.get("JOBHUNT_GMAIL_CREDENTIALS") or str(DEFAULT_CLIENT_FILE)
+                if not Path(client).exists():
+                    raise RuntimeError(
+                        f"Google OAuth client file not found at {client}. Save it there, or set "
+                        "JOBHUNT_GMAIL_CREDENTIALS to its path."
+                    )
                 creds = InstalledAppFlow.from_client_secrets_file(client, self.SCOPES).run_local_server(port=0)
             token_path.parent.mkdir(parents=True, exist_ok=True)
             token_path.write_text(creds.to_json())
         self._service = build("gmail", "v1", credentials=creds, cache_discovery=False)
         return self._service
+
+    def sign_in(self) -> str:
+        """Run the Google consent flow (if needed) and return the signed-in address."""
+        return self._svc().users().getProfile(userId="me").execute()["emailAddress"]
 
     def recent_messages(self, days: int) -> list[Message]:
         svc = self._svc()
