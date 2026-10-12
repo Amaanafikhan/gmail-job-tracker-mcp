@@ -16,6 +16,7 @@ from .mail import get_provider
 
 mcp = MCPServer(
     "Job Hunt Assistant",
+    version="0.1.0",
     instructions=(
         "Tracks the user's job applications. Replies are short sentences meant to be spoken aloud: "
         "read them back as-is. Company names can be partial (e.g. 'Zoho')."
