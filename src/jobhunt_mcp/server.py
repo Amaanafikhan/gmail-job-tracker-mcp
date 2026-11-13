@@ -12,6 +12,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, PlainTextResponse
 
 from . import db, tracker
+from .observe import observed
 from .mail import get_provider
 
 mcp = MCPServer(
@@ -47,6 +48,7 @@ WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False)
 
 
 @mcp.tool(annotations=WRITE)
+@observed
 def add_application(company: str, role: str = "", source: str = "") -> str:
     """Start tracking a job application. `source` is where you found it (LinkedIn, referral, ...)."""
     with db.connect() as conn:
@@ -54,6 +56,7 @@ def add_application(company: str, role: str = "", source: str = "") -> str:
 
 
 @mcp.tool(annotations=READ)
+@observed
 def list_applications(status: str = "") -> str:
     """Summarise tracked applications, optionally only one status:
     applied, replied, assessment, interview, offer or rejected."""
@@ -62,6 +65,7 @@ def list_applications(status: str = "") -> str:
 
 
 @mcp.tool(annotations=WRITE)
+@observed
 def update_status(company: str, status: str) -> str:
     """Set an application's status: applied, replied, assessment, interview, offer or rejected."""
     with db.connect() as conn:
@@ -69,6 +73,7 @@ def update_status(company: str, status: str) -> str:
 
 
 @mcp.tool(annotations=WRITE)
+@observed
 def add_followup(company: str, when: str, note: str = "") -> str:
     """Schedule a follow-up. `when` is spoken-style: 'Friday', 'tomorrow', 'in 3 days', or '2026-10-30'."""
     with db.connect() as conn:
@@ -76,6 +81,7 @@ def add_followup(company: str, when: str, note: str = "") -> str:
 
 
 @mcp.tool(annotations=READ)
+@observed
 def todays_followups() -> str:
     """List follow-ups that are due today or overdue."""
     with db.connect() as conn:
@@ -83,6 +89,7 @@ def todays_followups() -> str:
 
 
 @mcp.tool(annotations=WRITE)
+@observed
 def complete_followup(company: str) -> str:
     """Mark all open follow-ups for a company as done."""
     with db.connect() as conn:
@@ -90,6 +97,7 @@ def complete_followup(company: str) -> str:
 
 
 @mcp.tool(annotations=WRITE)
+@observed
 def check_new_replies(days: int = 7) -> str:
     """Check the inbox for new replies from companies you applied to, and update their status.
     Each reply is announced once."""

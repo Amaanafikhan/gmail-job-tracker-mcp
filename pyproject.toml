@@ -14,6 +14,8 @@ dev = ["pytest>=8", "httpx>=0.27"]
 [project.scripts]
 jobhunt-mcp = "jobhunt_mcp.server:main"
 jobhunt-auth = "jobhunt_mcp.auth:main"
+jobhunt-stats = "jobhunt_mcp.observe:main"
+jobhunt-eval = "jobhunt_mcp.evaluate:main"
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -58,6 +58,24 @@ docker build -t jobhunt-mcp .
 docker run -p 8000:8000 -v jobhunt-data:/data jobhunt-mcp
 ```
 
+## Observability and evaluation
+
+**Every tool call is logged** to `~/.jobhunt-mcp/tool_calls.jsonl` (move it with `JOBHUNT_LOG`, turn it off with `JOBHUNT_LOG=off`): tool name, arguments, latency, result size, a 200-character preview, and any error. Tools answer with a sentence instead of raising, so a call can succeed while the user still didn't get what they asked ("I couldn't find an application for Acme"). Those are flagged as **soft fails**.
+
+```bash
+jobhunt-stats            # calls, errors, soft fails, p50/p95 latency per tool
+jobhunt-stats --tail 10  # plus the last 10 calls
+```
+
+**The reply classifier has a labelled eval set** in `evals/classify_cases.jsonl` (23 recruiter emails, including tricky wording):
+
+```bash
+jobhunt-eval                     # accuracy, precision/recall per label, every miss
+jobhunt-eval --min-accuracy 0.9  # exit 1 below 90%, for CI
+```
+
+Current result: 16/23 (70%). The worst miss is "Unfortunately the interviewer is unavailable, can we move your interview?" being read as a rejection, because the rejection keywords are checked first. The loop is: read the misses, change a rule, re-run the eval, keep the change only if accuracy goes up without new misses.
+
 ## Status and known gaps
 
 - Tested: tracker logic, date parsing, reply classification, the HTTP routes, the `2025-11-25` handshake, and the web client driven end to end in headless Chromium against the demo inbox.

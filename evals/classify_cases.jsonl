@@ -1,0 +1,23 @@
+{"id": "interview-call", "subject": "Interview invitation: Python Developer", "body": "Hi, we liked your profile. Could we schedule a call for the technical round this week?", "expected": "interview"}
+{"id": "reject-plain", "subject": "Your application", "body": "Unfortunately we will not be moving forward with your application at this time.", "expected": "rejected"}
+{"id": "assess-hackerrank", "subject": "Online assessment for Backend Engineer", "body": "Please complete the coding test on HackerRank within 3 days.", "expected": "assessment"}
+{"id": "offer-letter", "subject": "Offer letter - Python Developer", "body": "We are pleased to offer you the position. Please find the offer letter attached.", "expected": "offer"}
+{"id": "ack-received", "subject": "Application received", "body": "Thank you for applying. Our team will review your profile and get back to you.", "expected": "other"}
+{"id": "interview-tech-round", "subject": "Next steps", "body": "We'd like to invite you for a technical round on Monday at 11 AM.", "expected": "interview"}
+{"id": "assess-assignment", "subject": "Assignment for Django Trainee", "body": "Please submit the assignment as a GitHub repository link by Friday.", "expected": "assessment"}
+{"id": "reject-regret", "subject": "Update on your application", "body": "We regret to inform you that the position has been filled.", "expected": "rejected"}
+{"id": "interview-hr", "subject": "HR round scheduling", "body": "Please share your availability for the HR round tomorrow.", "expected": "interview"}
+{"id": "assess-codility", "subject": "Codility test link", "body": "Here is your Codility link. You have 90 minutes once you start.", "expected": "assessment"}
+{"id": "assess-online-test", "subject": "Online test for Python Trainee", "body": "Please complete the online test before Friday.", "expected": "assessment"}
+{"id": "reject-not-shortlisted", "subject": "Application status", "body": "You have not been shortlisted for this role. We wish you the best.", "expected": "rejected"}
+{"id": "interview-rescheduled", "subject": "Interview rescheduled", "body": "Unfortunately the interviewer is unavailable. Can we move your interview to Thursday?", "expected": "interview"}
+{"id": "interview-quick-call", "subject": "Quick question", "body": "Are you free for a 15 minute call tomorrow to talk about the role?", "expected": "interview"}
+{"id": "offer-happy", "subject": "Congratulations!", "body": "We are happy to offer you the role of Junior Backend Developer.", "expected": "offer"}
+{"id": "ack-under-review", "subject": "Your Zoho application", "body": "Thanks for applying. Your application is under review.", "expected": "other"}
+{"id": "assess-take-home-no-hyphen", "subject": "Take home task", "body": "Here is a small take home task. Please send it back within 48 hours.", "expected": "assessment"}
+{"id": "interview-meet-lead", "subject": "Meet the team", "body": "We'd love for you to meet with our engineering lead this week.", "expected": "interview"}
+{"id": "interview-next-round", "subject": "Selected for the next round", "body": "Congratulations, you have been selected for the next round. Details will follow.", "expected": "interview"}
+{"id": "reject-not-proceed", "subject": "Application outcome", "body": "After careful review we have decided not to proceed with your application.", "expected": "rejected"}
+{"id": "reject-after-assessment", "subject": "Assessment results", "body": "Unfortunately you did not clear the assessment.", "expected": "rejected"}
+{"id": "other-course-promo", "subject": "Special offer: interview prep course", "body": "Get 50% off our interview prep course this week only.", "expected": "other"}
+{"id": "other-documents", "subject": "Document verification", "body": "Please share scanned copies of your ID and degree certificate for verification.", "expected": "other"}
